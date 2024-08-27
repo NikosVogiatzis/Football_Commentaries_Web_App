@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/index.css">
+    <title>Document</title>
+	
+	<script>
+
+		
+		function handleLinkClick(event, queryType, target, flag, data_Array) {
+		    event.preventDefault();
+		    document.getElementById('results').style.display = "none";
+			
+			
+			if ((queryType === 'statistics_player' || queryType === 'statistics_team') && target === '') {
+				window.alert("You should first select a Player and then press 'Submit'");
+				return;
+			}
+					    
+			 if ((queryType === 'statistics_player' || queryType === 'statistics_team') && data_Array) {
+				if (!data_Array.includes(target)) {
+					if(queryType === 'statistics_player'){
+					     window.alert("Selected player is not valid. Please select a valid option.");}
+					if(queryType === 'statistics_team'){
+						 window.alert("Selected team is not valid. Please select a valid option.");}	
+					return;
+				}
+			}
+			// Create a reference for the timeout
+			let timeoutId;
+
+			// Show the "Retrieving results" message after 5 seconds
+			timeoutId = setTimeout(() => {
+			        // Create a message box element
+			        const messageBox = document.createElement('div');
+			        messageBox.id = 'message-box';
+			        messageBox.innerHTML = '<p>Retrieving results...</p>';
+			        messageBox.style.position = 'fixed';
+			        messageBox.style.top = '50%';
+			        messageBox.style.left = '50%';
+			        messageBox.style.transform = 'translate(-50%, -50%)';
+			        messageBox.style.backgroundColor = 'white';
+			        messageBox.style.padding = '20px';
+			        messageBox.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+			        messageBox.style.zIndex = '1000';
+			        document.body.appendChild(messageBox);
+
+			        // Apply blur effect to the main page
+			        const mainContent = document.querySelector('body > *:not(#message-box)');
+			        if (mainContent) {
+			            mainContent.style.filter = 'blur(2px)';
+			            mainContent.style.pointerEvents = 'none'; 
+			        }
+			    }, 1000); //
+			
+		    
+
+		    fetch(`/run-query?queryType=${queryType}&target=${target}`, {
+		        method: 'GET'
+		    })
+		    .then(response => response.text())
+		    .then(data => {
+				clearTimeout(timeoutId);
+
+				// Remove the message box if it was displayed
+				const messageBox = document.getElementById('message-box');
+				if (messageBox) {
+				    messageBox.remove();
+				}
+
+				// Remove the blur effect
+				const mainContent = document.querySelector('body > *:not(#message-box)');
+				if (mainContent) {
+				    mainContent.style.filter = '';
+				    mainContent.style.pointerEvents = ''; // Re-enable interactions
+				}
+		        if ((queryType === 'retrieve_players' || queryType === 'retrieve_teams'))  {
+		            // Extract data for autocomplete
+		            const dataArray = extractDataFromHTML(data);
+		            const container = document.getElementById('autocomplete-container');
+		            if (container) {
+		                container.remove();
+		            }
+		            
+		            const newContainer = document.createElement('div');
+		            newContainer.id = 'autocomplete-container';
+		            newContainer.classList.add('autocomplete-container');
+		            
+		            const inputPlaceholder = flag === 'player' ? "Start typing player's name..." : "Start typing team's name...";
+		            const newQueryType = flag === 'player' ? 'statistics_player' : 'statistics_team';
+		            
+		            newContainer.innerHTML = `
+		                <input id="autocomplete-input" class="autocomplete-input" type="text" placeholder="${inputPlaceholder}">
+		                <div id="autocomplete-results" class="autocomplete-dropdown"></div>
+		                <a href="#" class="button" id="submit_button">Submit</a><br>
+		            `;
+		            
+		            document.querySelector('.container').appendChild(newContainer);
+		            newContainer.scrollIntoView({ behavior: "smooth" }); 
+		            newContainer.focus();
+
+		            // Attach the event listener with proper closure
+		            document.getElementById('submit_button').addEventListener('click', function(event) {
+		                handleLinkClick(event, newQueryType, document.getElementById('autocomplete-input').value, '', dataArray);
+		            });
+		            setupAutocomplete(document.getElementById('autocomplete-input'), dataArray);
+		            document.getElementById('results').classList.add('hidden');
+		        
+				} else {
+		            // Handle other query types
+		            const resultsDiv = document.getElementById('results');
+		            resultsDiv.innerHTML = data;
+		            resultsDiv.style.display = 'block'; 
+		            
+		            resultsDiv.scrollIntoView({ behavior: "smooth" }); 
+		            resultsDiv.focus(); 
+
+		            // Hide autocomplete input if it exists
+		            const autocompleteContainer = document.getElementById('autocomplete-container');
+		            if (autocompleteContainer) {
+		                autocompleteContainer.remove();
+		            }
+		        }
+		    })
+		    .catch(error => console.error('Error:', error));
+		}
+		
+		
+		// This function ectracts data retrieved from java SPARQL query execution and stores them in results table
+		function extractDataFromHTML(html) {
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(html, 'text/html');
+			const rows = doc.querySelectorAll('table tr td');
+			return Array.from(rows).map(td => td.textContent.trim());
+		}
+		
+		
+		// All functions below are responsible for autocomplete implementation when searching for player or team to retrieve his/its statistics
+		
+		function setupAutocomplete(inputElement, data) {
+			let currentFocus = -1;
+
+			inputElement.addEventListener('input', function() {
+			    const value = this.value;
+			    closeAllLists();
+			    if (!value) return;
+			    const resultsDiv = document.getElementById('autocomplete-results');
+			    resultsDiv.innerHTML = '';
+			    data.forEach((item) => {
+			        if (item.toLowerCase().includes(value.toLowerCase())) {
+			            const itemDiv = document.createElement('div');
+			            itemDiv.classList.add('autocomplete-item');
+			            itemDiv.innerHTML = item;
+			            itemDiv.addEventListener('click', function() {
+			                inputElement.value = item;
+			                closeAllLists();
+			            });
+			            resultsDiv.appendChild(itemDiv);
+			        }
+			    });
+			    resultsDiv.style.display = resultsDiv.hasChildNodes() ? 'block' : 'none';
+			});
+
+			inputElement.addEventListener('keydown', function(e) {
+			    const items = document.querySelectorAll('.autocomplete-item');
+			    if (e.key === 'ArrowDown') {
+			        currentFocus++;
+			        addActive(items);
+			    } else if (e.key === 'ArrowUp') {
+			        currentFocus--;
+			        addActive(items);
+			    } else if (e.key === 'Enter') {
+			        e.preventDefault();
+			        if (currentFocus > -1 && items[currentFocus]) {
+			            items[currentFocus].click();
+			        }
+			    }
+			});
+
+			function addActive(items) {
+			    if (!items.length) return;
+			    removeActive(items);
+			    if (currentFocus >= items.length) currentFocus = 0;
+			    if (currentFocus < 0) currentFocus = items.length - 1;
+			    items[currentFocus].classList.add('autocomplete-active');
+			}
+
+			function removeActive(items) {
+			    items.forEach(item => item.classList.remove('autocomplete-active'));
+			}
+
+			function closeAllLists(elmnt) {
+			    const items = document.querySelectorAll('.autocomplete-dropdown');
+			    items.forEach(item => {
+			        if (elmnt !== item && elmnt !== inputElement) {
+			            item.style.display = 'none';
+			        }
+			    });
+			}
+
+			document.addEventListener('click', function(e) {
+			    closeAllLists(e.target);
+			});
+		}
+		
+	</script>
+</head>
+<body>
+    <div class="container">
+        
+		<h2> Here you can run some SPARQL queries on a graph database created based on live commentaries refering to last 30 games of Champions league's season 2023/2024  </h2>
+		<h3> Options:</h3>
+		<br>
+		<div class = "button-container">	
+			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'top_scorrers', '', '')">View Top 10 Scorrers of the last 30 Champions League games</a> <br>
+			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'MVP', '', '')">View 5 MVP Players of the last 30 games </a> <br>
+			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'retrieve_players', '', 'player')">Select a Player by his name and view all his statistics</a> <br>
+			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'score', '', '')">View all 30 games played, and the score variation per half</a> <br>
+			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'goals_per_game', '', '')">View statistics about all Goals scored</a> <br>
+			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'fouls_AA_per_game', '', '')">View all Fouls and Attacking Attempts per game</a> <br>
+			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'retrieve_teams', '', 'team')">Select a Team to view some of it's statistics</a> <br>
+		</div>
+		<br>
+		<div id="results"> </div>					
+    </div>
+
+    
+</body>
+</html>
+
+	

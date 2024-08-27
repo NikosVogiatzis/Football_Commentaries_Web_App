@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="/matches.css">
+    <link rel="stylesheet" href="/index.css">
+    <title>Document</title>
+	
+	<script>
+	        function handleLinkClick(event, queryType) {
+	            event.preventDefault();
+	            fetch(`/run-query?queryType=${queryType}`, {
+	                method: 'GET'
+	            })
+	            .then(response => response.text())
+	            .then(data => {
+	                const resultsDiv = document.getElementById('results');
+	                resultsDiv.innerHTML = data;
+	                resultsDiv.style.display = 'block'; // Show the results div
+	            })
+	            .catch(error => console.error('Error:', error));
+	        }
+	    </script>
+</head>
+<body>
+    <div class="container">
+        <h2> Here you can try and run some SPARQL queries on general statistics about the 30 matches </h2>
+        <br>
+        <h3> Options:</h3>
+        <br>
+		
+		<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'score')">View all 30 games played, the score in each half and the end game score</a> <br>
+		<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'goals')">View all goals scored in each match, the scorer, and the minute goal scored</a> <br>
+		<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'fouls_AA_per_game')">View all fouls and attacking attempts that took place in each game</a> <br>
+
+		<div id="results">
+		</div>
+		<br><br>
+		   <a href="/index" class="button" id="HomeButton"> Home</a>
+    </div>
+	
+    <footer>
+        
+    </footer>
+    
+
+</body>
+</html>
