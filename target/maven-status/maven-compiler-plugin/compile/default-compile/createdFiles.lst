@@ -1,4 +1,4 @@
 org\example\WebController.class
-org\example\SparqlController.class
 org\example\App.class
-org\example\UIClass.class
+org\example\SparqlController.class
+org\example\ExeqQueryClass.class

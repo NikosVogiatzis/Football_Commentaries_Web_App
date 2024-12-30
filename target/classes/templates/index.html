@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/index.css">
-    <title>Document</title>
+    <title>Thesis Web App</title>
 	
 	<script>
 
@@ -31,7 +31,7 @@
 			// Create a reference for the timeout
 			let timeoutId;
 
-			// Show the "Retrieving results" message after 5 seconds
+			// Show the "Retrieving results" message after 1 seconds
 			timeoutId = setTimeout(() => {
 			        // Create a message box element
 			        const messageBox = document.createElement('div');
@@ -210,12 +210,12 @@
 <body>
     <div class="container">
         
-		<h2> Here you can run some SPARQL queries on a graph database created based on live commentaries refering to last 30 games of Champions league's season 2023/2024  </h2>
+		<h2> Here you can run some SPARQL queries on a graph database created based on live commentaries refering to last 30 games of Champions league's season 2024/2025  </h2>
 		<h3> Options:</h3>
 		<br>
 		<div class = "button-container">	
-			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'top_scorrers', '', '')">View Top 10 Scorrers of the last 30 Champions League games</a> <br>
-			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'MVP', '', '')">View 5 MVP Players of the last 30 games </a> <br>
+			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'top_scorrers', '', '')">View Top 10 Scorrers </a> <br>
+			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'MVP', '', '')">View 5 MVP Players  </a> <br>
 			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'retrieve_players', '', 'player')">Select a Player by his name and view all his statistics</a> <br>
 			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'score', '', '')">View all 30 games played, and the score variation per half</a> <br>
 			<a href="#" class="button" id="matches_options" onclick="handleLinkClick(event, 'goals_per_game', '', '')">View statistics about all Goals scored</a> <br>

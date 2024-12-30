@@ -10,12 +10,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class SparqlController {
 
     @Autowired
-    private UIClass uiClass;
+    private ExeqQueryClass exeq_query;
 
-    @GetMapping("/")
-    public String index() {
-        return "index";
-    }
 
     @GetMapping("/run-query")
     @ResponseBody
@@ -23,6 +19,21 @@ public class SparqlController {
         String query;
         String Title_Of_Table = "";
         switch (queryType) {
+	        case "top_scorrers":
+	        	
+	        	Title_Of_Table = "Top 10 Scorrers\n";
+	                query = "PREFIX : <http://www.semanticweb.org/vogia/ontologies/2024/3/untitled-ontology-53/>\r\n"
+	                		+ "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\r\n"
+	                		+ "select ?Player ?Team (COUNT(?goals) AS ?Goals) where {\r\n"
+	                		+ "    ?Player rdf:type :Scorrer .\r\n"
+	                		+ "    ?Player :playsFor ?Team .\r\n"
+	                		+ "	?goals rdf:type :Goal_Scored .\r\n"
+	                		+ "	?Player :scored ?goals .\r\n"
+	                		+ "} \r\n"
+	                		+ "GROUP BY ?Player ?Team\r\n"
+	                		+ "ORDER BY DESC(?Goals)\r\n"
+	                		+ "LIMIT 10";
+	            break;  
             case "score":
             	Title_Of_Table = "Score Variation Per Game";
             	query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\r\n"
@@ -109,24 +120,7 @@ public class SparqlController {
                 		+ "GROUP BY ?Match ?Teams\r\n"
                 		+ "ORDER BY ?Match";
                 break;
-                
-          
-            case "top_scorrers":
-            	
-            	Title_Of_Table = "Top 10 Scorrers\n";
-	                query = "PREFIX : <http://www.semanticweb.org/vogia/ontologies/2024/3/untitled-ontology-53/>\r\n"
-	                		+ "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\r\n"
-	                		+ "select ?Player ?Team (COUNT(?goals) AS ?Goals) where {\r\n"
-	                		+ "    ?Player rdf:type :Player .\r\n"
-	                		+ "    ?Player :playsFor ?Team .\r\n"
-	                		+ "	?goals rdf:type :Goal_Scored .\r\n"
-	                		+ "	?Player :scored ?goals .\r\n"
-	                		+ "} \r\n"
-	                		+ "GROUP BY ?Player ?Team\r\n"
-	                		+ "ORDER BY DESC(?Goals)\r\n"
-	                		+ "LIMIT 10";
-                break;  
-                
+                                
             case "retrieve_players":
             	Title_Of_Table = "";
                 query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\r\n"
@@ -162,7 +156,6 @@ public class SparqlController {
                 break;     
                 
             case "statistics_player":
-            	System.out.println(target);
             	Title_Of_Table = "All statistics about " + target;
             	String players_statistics = target;
             	players_statistics = players_statistics.replace(" ", "_"); 
@@ -280,7 +273,6 @@ public class SparqlController {
              
                 
             case "statistics_team":
-            	System.out.println(target);
             	Title_Of_Table = "Statistics about " + target;
             	String team_statistics = target;
             	players_statistics = team_statistics.replace(" ", "_"); 
@@ -357,7 +349,7 @@ public class SparqlController {
             default:
                 return "Invalid query type.";
         }
-        String results = uiClass.executeQuery(query);
+        String results = exeq_query.executeQuery(query);
         return formatResultsAsHtml(results, Title_Of_Table);
     }
 
